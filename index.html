@@ -4,114 +4,228 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Game Social Media Report Generator</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { padding: 10px 15px; margin-right: 10px; }
-        #imagePreview { max-width: 100%; max-height: 300px; display: none; margin-top: 10px; }
-        #reportOutput { margin-top: 20px; border: 1px solid #ddd; padding: 15px; }
-        @media print {
-            body * { visibility: hidden; }
-            #reportOutput, #reportOutput * { visibility: visible; }
-            #reportOutput { position: absolute; left: 0; top: 0; }
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
-    <div id="inputForm">
-        <h1>Video Game Social Media Report Generator</h1>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-3xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <h1 class="text-2xl font-bold mb-4 text-center text-blue-600">Video Game Social Media Report Generator</h1>
         
-        <div class="input-group">
-            <label for="gameTitle">Video Game Title:</label>
-            <input type="text" id="gameTitle" required>
-        </div>
-        <div class="input-group">
-            <label for="postDate">Post Date:</label>
-            <input type="date" id="postDate" required>
-        </div>
-        <div class="input-group">
-            <label for="postContent">Post Content:</label>
-            <textarea id="postContent" required></textarea>
-        </div>
-        <div class="input-group">
-            <label for="imageUpload">Upload Image:</label>
-            <input type="file" id="imageUpload" accept="image/*">
-            <img id="imagePreview" src="" alt="Image preview">
-        </div>
-        <div class="input-group">
-            <label for="likes">Likes:</label>
-            <input type="number" id="likes" required>
-        </div>
-        <div class="input-group">
-            <label for="retweets">Shares/Retweets:</label>
-            <input type="number" id="retweets" required>
-        </div>
-        <div class="input-group">
-            <label for="comments">Comments:</label>
-            <input type="number" id="comments" required>
-        </div>
-        
-        <button onclick="generateReport()">Generate Report</button>
-        <button onclick="exportToPDF()">Export to PDF</button>
+        <form id="reportForm" class="space-y-4">
+            <div>
+                <label for="gameTitle" class="block text-sm font-medium text-gray-700">Game Title</label>
+                <input type="text" id="gameTitle" name="gameTitle" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+            </div>
+            
+            <div>
+                <label for="postDate" class="block text-sm font-medium text-gray-700">Post Date</label>
+                <input type="date" id="postDate" name="postDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+            </div>
+            
+            <div>
+                <label for="postContent" class="block text-sm font-medium text-gray-700">Post Content</label>
+                <textarea id="postContent" name="postContent" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"></textarea>
+            </div>
+            
+            <div>
+                <label for="imageUpload" class="block text-sm font-medium text-gray-700">Upload Image</label>
+                <input type="file" id="imageUpload" name="imageUpload" accept="image/*" class="mt-1 block w-full">
+            </div>
+            
+            <div id="imagePreview" class="mt-2 hidden">
+                <img id="previewImg" src="" alt="Preview" class="max-w-full h-auto">
+            </div>
+            
+            <div>
+                <label for="likes" class="block text-sm font-medium text-gray-700">Likes</label>
+                <input type="number" id="likes" name="likes" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+            </div>
+            
+            <div>
+                <label for="shares" class="block text-sm font-medium text-gray-700">Shares/Retweets</label>
+                <input type="number" id="shares" name="shares" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+            </div>
+            
+            <div>
+                <label for="comments" class="block text-sm font-medium text-gray-700">Comments</label>
+                <input type="number" id="comments" name="comments" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+            </div>
+            
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Generate Report
+            </button>
+        </form>
     </div>
 
-    <div id="reportOutput"></div>
+    <div id="reportOutput" class="max-w-3xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 hidden">
+        <h2 class="text-xl font-bold mb-4 text-blue-600">Generated Report</h2>
+        <div id="reportContent"></div>
+        <div class="flex space-x-4">
+            <button id="downloadHtml" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Download as HTML
+            </button>
+            <button id="downloadPdf" class="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Download as PDF
+            </button>
+        </div>
+        <div id="uploadInstructions" class="mt-4 p-4 bg-yellow-100 rounded">
+            <h3 class="font-bold">Upload to Google Drive Instructions:</h3>
+            <ol class="list-decimal list-inside">
+                <li>Click either the "Download as HTML" or "Download as PDF" button above</li>
+                <li>Go to <a href="https://drive.google.com" target="_blank" class="text-blue-600 hover:underline">Google Drive</a></li>
+                <li>Click "New" > "File upload" and select the downloaded file</li>
+                <li>Once uploaded, you can open and view the report in Google Drive</li>
+            </ol>
+        </div>
+    </div>
 
     <script>
-        let uploadedImage = null;
+        const reportForm = document.getElementById('reportForm');
+        const reportOutput = document.getElementById('reportOutput');
+        const reportContent = document.getElementById('reportContent');
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const downloadHtmlBtn = document.getElementById('downloadHtml');
+        const downloadPdfBtn = document.getElementById('downloadPdf');
 
-        document.getElementById('imageUpload').addEventListener('change', function(event) {
+        let currentReport = null;
+
+        imageUpload.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    uploadedImage = e.target.result;
-                    document.getElementById('imagePreview').src = uploadedImage;
-                    document.getElementById('imagePreview').style.display = 'block';
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
                 }
                 reader.readAsDataURL(file);
             }
         });
 
-        function generateReport() {
-            const gameTitle = document.getElementById('gameTitle').value;
-            const postDate = document.getElementById('postDate').value;
-            const postContent = document.getElementById('postContent').value;
-            const likes = document.getElementById('likes').value;
-            const retweets = document.getElementById('retweets').value;
-            const comments = document.getElementById('comments').value;
+        reportForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateReport();
+        });
 
-            const formattedDate = new Date(postDate).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
+        function generateReport() {
+            const formData = new FormData(reportForm);
+            const data = Object.fromEntries(formData);
+
+            const likes = parseInt(data.likes) || 0;
+            const shares = parseInt(data.shares) || 0;
+            const comments = parseInt(data.comments) || 0;
+
+            const engagementRate = ((likes + shares + comments) / (likes + shares || 1)) * 100;
+
+            currentReport = {
+                gameTitle: data.gameTitle,
+                postDate: data.postDate,
+                postContent: data.postContent,
+                image: previewImg.src,
+                likes: likes,
+                shares: shares,
+                comments: comments,
+                engagementRate: engagementRate.toFixed(2)
+            };
+
+            displayReport();
+        }
+
+        function displayReport() {
+            if (!currentReport) return;
 
             const reportHtml = `
-                <h2>Social Media Report for ${gameTitle}</h2>
-                <p><strong>Date:</strong> ${formattedDate}</p>
-                <p><strong>Content:</strong> ${postContent}</p>
-                ${uploadedImage ? `<img src="${uploadedImage}" alt="Uploaded image" style="max-width:100%; margin-top:10px;">` : ''}
-                <p><strong>Engagement:</strong></p>
-                <ul>
-                    <li>Likes: ${likes}</li>
-                    <li>Retweets: ${retweets}</li>
-                    <li>Comments: ${comments}</li>
-                </ul>
+                <div class="mb-8 p-4 border border-gray-200 rounded">
+                    <h3 class="text-lg font-bold mb-2">${currentReport.gameTitle}</h3>
+                    <p><strong>Post Date:</strong> ${currentReport.postDate}</p>
+                    <p><strong>Post Content:</strong> ${currentReport.postContent}</p>
+                    ${currentReport.image ? `<img src="${currentReport.image}" alt="Report Image" class="mt-2 max-w-full h-auto">` : ''}
+                    <p><strong>Likes:</strong> ${currentReport.likes}</p>
+                    <p><strong>Shares/Retweets:</strong> ${currentReport.shares}</p>
+                    <p><strong>Comments:</strong> ${currentReport.comments}</p>
+                    <p><strong>Engagement Rate:</strong> ${currentReport.engagementRate}%</p>
+                </div>
             `;
-
-            document.getElementById('reportOutput').innerHTML = reportHtml;
+            reportContent.innerHTML = reportHtml;
+            reportOutput.classList.remove('hidden');
         }
 
-        function exportToPDF() {
-            if (document.getElementById('reportOutput').innerHTML.trim() === '') {
-                alert('Please generate a report first before exporting to PDF.');
+        downloadHtmlBtn.addEventListener('click', function() {
+            if (!currentReport) {
+                alert("Please generate a report first.");
                 return;
             }
-            window.print();
-        }
+
+            const reportHtml = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${currentReport.gameTitle} - Social Media Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+                        h1 { color: #2c5282; }
+                        img { max-width: 100%; height: auto; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${currentReport.gameTitle} - Social Media Report</h1>
+                    <p><strong>Post Date:</strong> ${currentReport.postDate}</p>
+                    <p><strong>Post Content:</strong> ${currentReport.postContent}</p>
+                    ${currentReport.image ? `<img src="${currentReport.image}" alt="Report Image">` : ''}
+                    <p><strong>Likes:</strong> ${currentReport.likes}</p>
+                    <p><strong>Shares/Retweets:</strong> ${currentReport.shares}</p>
+                    <p><strong>Comments:</strong> ${currentReport.comments}</p>
+                    <p><strong>Engagement Rate:</strong> ${currentReport.engagementRate}%</p>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([reportHtml], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentReport.gameTitle.replace(/\s+/g, '_')}_report.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        downloadPdfBtn.addEventListener('click', function() {
+            if (!currentReport) {
+                alert("Please generate a report first.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(20);
+            doc.text(`${currentReport.gameTitle} - Social Media Report`, 10, 20);
+
+            doc.setFontSize(12);
+            doc.text(`Post Date: ${currentReport.postDate}`, 10, 40);
+            
+            const splitContent = doc.splitTextToSize(`Post Content: ${currentReport.postContent}`, 180);
+            doc.text(splitContent, 10, 50);
+
+            let yPos = 50 + (splitContent.length * 7);
+
+            if (currentReport.image) {
+                const imgData = currentReport.image;
+                doc.addImage(imgData, 'JPEG', 10, yPos, 180, 100);
+                yPos += 110;
+            }
+
+            doc.text(`Likes: ${currentReport.likes}`, 10, yPos + 10);
+            doc.text(`Shares/Retweets: ${currentReport.shares}`, 10, yPos + 20);
+            doc.text(`Comments: ${currentReport.comments}`, 10, yPos + 30);
+            doc.text(`Engagement Rate: ${currentReport.engagementRate}%`, 10, yPos + 40);
+
+            doc.save(`${currentReport.gameTitle.replace(/\s+/g, '_')}_report.pdf`);
+        });
     </script>
 </body>
 </html>
